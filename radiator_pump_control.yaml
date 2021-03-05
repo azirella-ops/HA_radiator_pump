@@ -1,0 +1,35 @@
+- id: '1614876046020'
+  alias: Control Radiator Pump
+  description: ''
+  trigger:
+  - platform: template
+    value_template: "{% set result = namespace(sensors=[]) %} \n{% for state in states\
+      \ | selectattr('name', '==', 'Thermostat heating') %} \n  {% set result.sensors\
+      \ = result.sensors + state.entity_id %}\n{% endfor %} \n{{ result.sensors }}"
+  condition: []
+  action:
+  - choose:
+    - conditions:
+      - condition: template
+        value_template: "{% set result = namespace(heating=false) %} \n  {% for state\
+          \ in states | selectattr('name', '==', 'Thermostat heating') %} \n    {%\
+          \ if float(state.state) > 10.0 %} \n      {% set result.heating = true %}\
+          \ \n   {% endif %} \n {% endfor %} \n{{ result }}"
+      sequence:
+      - type: turn_on
+        device_id: 0f93bf59735a64a339b728a29ef1e1c2
+        entity_id: switch.radiator_pump
+        domain: switch
+    - conditions: []
+      sequence: []
+    default:
+    - type: turn_off
+      device_id: 0f93bf59735a64a339b728a29ef1e1c2
+      entity_id: switch.radiator_pump
+      domain: switch
+  - device_id: ed40be992e47be6b29df1b2e0b089a11
+    domain: mobile_app
+    type: notify
+    message: Radiator pump {{switch.radiator_pump.state}}
+    title: Radiator pump toggle
+  mode: single
